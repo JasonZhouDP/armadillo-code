@@ -102,6 +102,13 @@ class Cube : public BaseCube< eT, Cube<eT> >
   inline Cube& operator%=(const subview_cube<eT>& X);
   inline Cube& operator/=(const subview_cube<eT>& X);
 
+  template<typename T1> inline             Cube(const subview_cube_slices<eT,T1>& X);
+  template<typename T1> inline Cube&  operator=(const subview_cube_slices<eT,T1>& X);
+  template<typename T1> inline Cube& operator+=(const subview_cube_slices<eT,T1>& X);
+  template<typename T1> inline Cube& operator-=(const subview_cube_slices<eT,T1>& X);
+  template<typename T1> inline Cube& operator%=(const subview_cube_slices<eT,T1>& X);
+  template<typename T1> inline Cube& operator/=(const subview_cube_slices<eT,T1>& X);
+
   arma_inline       subview_cube<eT> row(const uword in_row);
   arma_inline const subview_cube<eT> row(const uword in_row) const;
   
@@ -174,7 +181,11 @@ class Cube : public BaseCube< eT, Cube<eT> >
   inline const Cube& each_slice(const std::function< void(const Mat<eT>&) >& F, const bool use_mp) const;
   #endif
   
-
+  
+  template<typename T1> arma_inline       subview_cube_slices<eT,T1> slices(const Base<uword,T1>& indices);
+  template<typename T1> arma_inline const subview_cube_slices<eT,T1> slices(const Base<uword,T1>& indices) const;
+  
+  
   inline void shed_row(const uword row_num);
   inline void shed_col(const uword col_num);
   inline void shed_slice(const uword slice_num);
@@ -183,10 +194,13 @@ class Cube : public BaseCube< eT, Cube<eT> >
   inline void shed_cols(const uword in_col1, const uword in_col2);
   inline void shed_slices(const uword in_slice1, const uword in_slice2);
   
+  inline void insert_rows(const uword row_num, const uword N, const bool set_to_zero = true);
+  inline void insert_cols(const uword row_num, const uword N, const bool set_to_zero = true);
   inline void insert_slices(const uword slice_num, const uword N, const bool set_to_zero = true);
   
-  template<typename T1>
-  inline void insert_slices(const uword row_num, const BaseCube<eT,T1>& X);
+  template<typename T1> inline void insert_rows(const uword row_num, const BaseCube<eT,T1>& X);
+  template<typename T1> inline void insert_cols(const uword col_num, const BaseCube<eT,T1>& X);
+  template<typename T1> inline void insert_slices(const uword slice_num, const BaseCube<eT,T1>& X);
   
   
   template<typename gen_type> inline             Cube(const GenCube<eT, gen_type>& X);

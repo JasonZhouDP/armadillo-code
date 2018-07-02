@@ -857,6 +857,112 @@ Cube<eT>::operator/=(const subview_cube<eT>& X)
 
 
 
+template<typename eT>
+template<typename T1>
+inline
+Cube<eT>::Cube(const subview_cube_slices<eT,T1>& X)
+  : n_rows(0)
+  , n_cols(0)
+  , n_elem_slice(0)
+  , n_slices(0)
+  , n_elem(0)
+  , mem_state(0)
+  , mem()
+  , mat_ptrs(0)
+  {
+  arma_extra_debug_sigprint_this(this);
+  
+  subview_cube_slices<eT,T1>::extract(*this, X);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+Cube<eT>&
+Cube<eT>::operator=(const subview_cube_slices<eT,T1>& X)
+  {
+  arma_extra_debug_sigprint();
+  
+  const bool alias = (this == &(X.m));
+  
+  if(alias == false)
+    {
+    subview_cube_slices<eT,T1>::extract(*this, X);
+    }
+  else
+    {
+    Cube<eT> tmp(X);
+    
+    steal_mem(tmp);
+    }
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+Cube<eT>&
+Cube<eT>::operator+=(const subview_cube_slices<eT,T1>& X)
+  {
+  arma_extra_debug_sigprint();
+  
+  subview_cube_slices<eT,T1>::plus_inplace(*this, X);
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+Cube<eT>&
+Cube<eT>::operator-=(const subview_cube_slices<eT,T1>& X)
+  {
+  arma_extra_debug_sigprint();
+  
+  subview_cube_slices<eT,T1>::minus_inplace(*this, X);
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+Cube<eT>&
+Cube<eT>::operator%=(const subview_cube_slices<eT,T1>& X)
+  {
+  arma_extra_debug_sigprint();
+  
+  subview_cube_slices<eT,T1>::schur_inplace(*this, X);
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+Cube<eT>&
+Cube<eT>::operator/=(const subview_cube_slices<eT,T1>& X)
+  {
+  arma_extra_debug_sigprint();
+  
+  subview_cube_slices<eT,T1>::div_inplace(*this, X);
+  
+  return *this;
+  }
+
+
+
 //! creation of subview_cube (subcube comprised of specified row)
 template<typename eT>
 arma_inline
@@ -982,7 +1088,7 @@ Cube<eT>::rows(const uword in_row1, const uword in_row2)
 
 
 
-//! creation of subview_cube (subcube comprised of specified slices)
+//! creation of subview_cube (subcube comprised of specified rows)
 template<typename eT>
 arma_inline
 const subview_cube<eT>
@@ -1024,7 +1130,7 @@ Cube<eT>::cols(const uword in_col1, const uword in_col2)
 
 
 
-//! creation of subview_cube (subcube comprised of specified slices)
+//! creation of subview_cube (subcube comprised of specified columns)
 template<typename eT>
 arma_inline
 const subview_cube<eT>
@@ -1793,6 +1899,32 @@ Cube<eT>::each_slice(const Base<uword, T1>& indices) const
 
 
 
+template<typename eT>
+template<typename T1>
+inline
+subview_cube_slices<eT, T1>
+Cube<eT>::slices(const Base<uword, T1>& indices)
+  {
+  arma_extra_debug_sigprint();
+  
+  return subview_cube_slices<eT, T1>(*this, indices);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+const subview_cube_slices<eT, T1>
+Cube<eT>::slices(const Base<uword, T1>& indices) const
+  {
+  arma_extra_debug_sigprint();
+  
+  return subview_cube_slices<eT, T1>(*this, indices);
+  }
+
+
+
 //! remove specified row
 template<typename eT>
 inline
@@ -1940,6 +2072,86 @@ Cube<eT>::shed_slices(const uword in_slice1, const uword in_slice2)
 
 
 
+template<typename eT>
+inline
+void
+Cube<eT>::insert_rows(const uword row_num, const uword N, const bool set_to_zero)
+  {
+  arma_extra_debug_sigprint();
+  
+  const uword t_n_rows = n_rows;
+  
+  const uword A_n_rows = row_num;
+  const uword B_n_rows = t_n_rows - row_num;
+  
+  // insertion at row_num == n_rows is in effect an append operation
+  arma_debug_check( (row_num > t_n_rows), "Cube::insert_rows(): index out of bounds");
+  
+  if(N > 0)
+    {
+    Cube<eT> out(t_n_rows + N, n_cols, n_slices);
+    
+    if(A_n_rows > 0)
+      {
+      out.rows(0, A_n_rows-1) = rows(0, A_n_rows-1);
+      }
+    
+    if(B_n_rows > 0)
+      {
+      out.rows(row_num + N, t_n_rows + N - 1) = rows(row_num, t_n_rows-1);
+      }
+    
+    if(set_to_zero == true)
+      {
+      out.rows(row_num, row_num + N - 1).zeros();
+      }
+    
+    steal_mem(out);
+    }
+  }
+
+
+
+template<typename eT>
+inline
+void
+Cube<eT>::insert_cols(const uword col_num, const uword N, const bool set_to_zero)
+  {
+  arma_extra_debug_sigprint();
+  
+  const uword t_n_cols = n_cols;
+  
+  const uword A_n_cols = col_num;
+  const uword B_n_cols = t_n_cols - col_num;
+  
+  // insertion at col_num == n_cols is in effect an append operation
+  arma_debug_check( (col_num > t_n_cols), "Cube::insert_cols(): index out of bounds");
+  
+  if(N > 0)
+    {
+    Cube<eT> out(n_rows, t_n_cols + N, n_slices);
+    
+    if(A_n_cols > 0)
+      {
+      out.cols(0, A_n_cols-1) = cols(0, A_n_cols-1);
+      }
+    
+    if(B_n_cols > 0)
+      {
+      out.cols(col_num + N, t_n_cols + N - 1) = cols(col_num, t_n_cols-1);
+      }
+    
+    if(set_to_zero == true)
+      {
+      out.cols(col_num, col_num + N - 1).zeros();
+      }
+    
+    steal_mem(out);
+    }
+  }
+
+
+
 //! insert N slices at the specified slice position,
 //! optionally setting the elements of the inserted slices to zero
 template<typename eT>
@@ -1980,6 +2192,104 @@ Cube<eT>::insert_slices(const uword slice_num, const uword N, const bool set_to_
         arrayops::fill_zeros(out.slice_memptr(i), out.n_elem_slice);
         }
       }
+    
+    steal_mem(out);
+    }
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+void
+Cube<eT>::insert_rows(const uword row_num, const BaseCube<eT,T1>& X)
+  {
+  arma_extra_debug_sigprint();
+  
+  const unwrap_cube<T1> tmp(X.get_ref());
+  const Cube<eT>& C   = tmp.M;
+  
+  const uword N = C.n_rows;
+  
+  const uword t_n_rows = n_rows;
+  
+  const uword A_n_rows = row_num;
+  const uword B_n_rows = t_n_rows - row_num;
+  
+  // insertion at row_num == n_rows is in effect an append operation
+  arma_debug_check( (row_num  >  t_n_rows), "Cube::insert_rows(): index out of bounds");
+  
+  arma_debug_check
+    (
+    ( (C.n_cols != n_cols) || (C.n_slices != n_slices) ),
+    "Cube::insert_rows(): given object has incompatible dimensions"
+    );
+  
+  if(N > 0)
+    {
+    Cube<eT> out(t_n_rows + N, n_cols, n_slices);
+    
+    if(A_n_rows > 0)
+      {
+      out.rows(0, A_n_rows-1) = rows(0, A_n_rows-1);
+      }
+    
+    if(B_n_rows > 0)
+      {
+      out.rows(row_num + N, t_n_rows + N - 1) = rows(row_num, t_n_rows - 1);
+      }
+    
+    out.rows(row_num, row_num + N - 1) = C;
+    
+    steal_mem(out);
+    }
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+void
+Cube<eT>::insert_cols(const uword col_num, const BaseCube<eT,T1>& X)
+  {
+  arma_extra_debug_sigprint();
+  
+  const unwrap_cube<T1> tmp(X.get_ref());
+  const Cube<eT>& C   = tmp.M;
+  
+  const uword N = C.n_cols;
+  
+  const uword t_n_cols = n_cols;
+  
+  const uword A_n_cols = col_num;
+  const uword B_n_cols = t_n_cols - col_num;
+  
+  // insertion at col_num == n_cols is in effect an append operation
+  arma_debug_check( (col_num  >  t_n_cols), "Cube::insert_cols(): index out of bounds");
+  
+  arma_debug_check
+    (
+    ( (C.n_rows != n_rows) || (C.n_slices != n_slices) ),
+    "Cube::insert_cols(): given object has incompatible dimensions"
+    );
+  
+  if(N > 0)
+    {
+    Cube<eT> out(n_rows, t_n_cols + N, n_slices);
+    
+    if(A_n_cols > 0)
+      {
+      out.cols(0, A_n_cols-1) = cols(0, A_n_cols-1);
+      }
+    
+    if(B_n_cols > 0)
+      {
+      out.cols(col_num + N, t_n_cols + N - 1) = cols(col_num, t_n_cols - 1);
+      }
+    
+    out.cols(col_num, col_num + N - 1) = C;
     
     steal_mem(out);
     }
@@ -2038,7 +2348,7 @@ Cube<eT>::insert_slices(const uword slice_num, const BaseCube<eT,T1>& X)
 
 
 
-//! create a cube from OpCube, i.e. run the previously delayed unary operations
+//! create a cube from GenCube, i.e. run the previously delayed element generation operations
 template<typename eT>
 template<typename gen_type>
 inline
@@ -2474,7 +2784,7 @@ Cube<eT>::operator/=(const mtOpCube<eT, T1, op_type>& X)
 
 
 
-//! create a cube from Glue, i.e. run the previously delayed binary operations
+//! create a cube from GlueCube, i.e. run the previously delayed binary operations
 template<typename eT>
 template<typename T1, typename T2, typename glue_type>
 inline
@@ -2494,7 +2804,7 @@ Cube<eT>::Cube(const GlueCube<T1, T2, glue_type>& X)
 
 
 
-//! create a cube from Glue, i.e. run the previously delayed binary operations
+//! create a cube from GlueCube, i.e. run the previously delayed binary operations
 template<typename eT>
 template<typename T1, typename T2, typename glue_type>
 inline
@@ -2588,7 +2898,7 @@ Cube<eT>::operator/=(const GlueCube<T1, T2, glue_type>& X)
 
 
 
-//! create a cube from eGlue, i.e. run the previously delayed binary operations
+//! create a cube from eGlueCube, i.e. run the previously delayed binary operations
 template<typename eT>
 template<typename T1, typename T2, typename eglue_type>
 inline
@@ -2614,7 +2924,7 @@ Cube<eT>::Cube(const eGlueCube<T1, T2, eglue_type>& X)
 
 
 
-//! create a cube from Glue, i.e. run the previously delayed binary operations
+//! create a cube from eGlueCube, i.e. run the previously delayed binary operations
 template<typename eT>
 template<typename T1, typename T2, typename eglue_type>
 inline

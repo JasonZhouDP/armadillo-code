@@ -78,8 +78,8 @@ Authors:
 2: Citation Details
 ===================
 
-Please cite one of the following papers if you use Armadillo in your
-research and/or software. Citations are useful for the continued
+Please cite one (or both) of the following papers if you use Armadillo
+in your research and/or software. Citations are useful for the continued
 development and maintenance of the library.
 
   Conrad Sanderson and Ryan Curtin.
@@ -301,8 +301,9 @@ Faster and/or alternative implementations of BLAS and LAPACK are available:
 
 The OpenBLAS and Intel MKL libraries are generally the fastest.
 
-Caveat: for any serious and/or performance critical work,
-we recommend using a Linux based operating system:
+Caveat: Windows and MSVC are poor platforms for scientific/engineering development.
+For any serious and/or performance critical work, we recommend using
+a Linux based operating system:
   Fedora  http://fedoraproject.org/
   Ubuntu  http://www.ubuntu.com/
   CentOS  http://centos.org/
@@ -491,5 +492,5 @@ Octave/Matlab with C++ code that uses Armadillo matrices.
 * SigPack: C++ signal processing library using Armadillo
   http://sigpack.sourceforge.net
   
-* matlab2cpp: conversion of Matlab code to Armadillo based C++ code
-  https://github.com/jonathf/matlab2cpp
+* OptimLib: C++ library of numerical optimisation methods for nonlinear functions
+  https://www.kthohr.com/optimlib.html
